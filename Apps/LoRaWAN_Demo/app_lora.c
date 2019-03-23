@@ -165,12 +165,12 @@ static bool AppLedStateOn = false;
 /*!
 * Timer to handle the state of LED1
 */
-static TimerEvent_t Led1Timer;
+//static TimerEvent_t Led1Timer;
 
 /*!
 * Timer to handle the state of LED2
 */
-static TimerEvent_t Led2Timer;
+//static TimerEvent_t Led2Timer;
 
 /*!
 * Indicates if a new packet can be sent
@@ -179,9 +179,9 @@ static bool NextTx = true;
 
 static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt);
 
-extern void cli_init(void);
-extern void cli_start(void);
-extern void cli_process(void);
+//extern void cli_init(void);
+//extern void cli_start(void);
+//extern void cli_process(void);
 
 static const lora_cfg_t g_def_cfg =
 {
@@ -347,6 +347,7 @@ static void PrepareTxFrame( uint8_t port )
             AppData[4] = 0x05;
             AppDataSize = 5;
         }
+        break;
       case 224:
         if( ComplianceTest.LinkCheck == true )
         {
