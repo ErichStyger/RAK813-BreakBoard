@@ -960,19 +960,6 @@ void nRF_lora_init()
     printf("LoRa init success.\r\n");
 }
 
-#if 0 /* \todo!!!! */
-uint32_t __start_log_const_data;
-uint32_t __stop_log_const_data;
-uint32_t __start_log_dynamic_data;
-uint32_t __stop_log_dyynamic_data;
-uint32_t __start_sdh_req_observers;
-uint32_t __stop_sdh_req_observers;
-uint32_t __start_sdh_state_observers;
-uint32_t __stop_sdh_state_observers;
-uint32_t __start_sdh_stack_observers;
-uint32_t __stop_sdh_stack_observers;
-#endif
-
 int main(void)
 {
     uint32_t err_code;
