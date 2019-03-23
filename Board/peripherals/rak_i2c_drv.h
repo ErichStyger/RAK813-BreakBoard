@@ -9,6 +9,7 @@ uint32_t rak_i2c_write(uint8_t twi_addr, uint8_t reg, uint8_t *data, uint16_t le
 uint8_t rak_i2c_read(uint8_t twi_addr, uint8_t reg, uint8_t * data, uint16_t len);
 uint32_t rak_i2c_simple_write(uint8_t twi_addr, uint8_t *data, uint16_t len);
 uint8_t rak_i2c_simple_read(uint8_t twi_addr, uint8_t * data, uint16_t len);
-void rak_i2c_disable();
+void rak_i2c_disable(void);
+void rak_i2c_deinit(void);
 
 #endif
