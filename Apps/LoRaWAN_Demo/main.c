@@ -48,6 +48,7 @@
 * This application uses the @ref srvlib_conn_params module.
 */
 
+#include "Platform.h"
 #include <stdint.h>
 #include <string.h>
 #include "board.h"
@@ -949,7 +950,7 @@ void nRF_BLE_init()
     printf("nRF BLE init success.\r\n");
 }
 
-void nRF_lora_init()
+void nRF_lora_init(void)
 {
     /* load lora configuration*/
     u_fs_init();

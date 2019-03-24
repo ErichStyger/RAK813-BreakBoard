@@ -339,7 +339,7 @@ static void PrintTxFrame(void) {
 
   printf("TX Frame: ");
   for(i=0; i<AppDataSize; i++) {
-    printf("%x ", AppData[i]);
+    printf("%02X ", AppData[i]);
   }
   printf("\r\n");
 }
@@ -349,6 +349,7 @@ static void PrepareTxFrame( uint8_t port )
     switch( port )
     {
       case 2:
+#if 0
         { /* dummy data */
             AppData[0] = 0x01;
             AppData[1] = 0x02;
@@ -357,6 +358,56 @@ static void PrepareTxFrame( uint8_t port )
             AppData[4] = 0x05;
             AppDataSize = 5;
         }
+#else
+        {
+          /*lat=47.054777 lon=8.585165 alt=659*/
+          /* https://www.thethingsnetwork.org/docs/applications/ttnmapper/ */
+          /* https://github.com/AmedeeBulle/ttn-mapper/blob/master/ttn-mapper-gps/ttn_mapper.cpp#L116 */
+          float lat = 47.054777;
+          float lon = 8.585165;
+          uint16_t alt = 659;
+          uint8_t hdop = 0x4; /* Horizontal Dilution of Precision, lower is better */
+
+          uint32_t val;
+
+          val = ((lat*(lat>=0?1:-1)+90)/180)*16777215;
+          AppData[0]  = val>>16; /* lat */
+          AppData[1]  = val>>8;
+          AppData[2]  = val;
+          val = ((lon*(lon>=0?1:-1)+180)/360)*16777215;
+          AppData[3]  = val>>16; /* lon */
+          AppData[4]  = val>>8;
+          AppData[5]  = val;
+          AppData[6]  = alt>>8; /* alt */
+          AppData[7]  = alt;
+          AppData[8]  = hdop; /* hdop */
+          AppDataSize = 9;
+        }
+#if 0 /* tnn decoder function */
+        /* https://www.thethingsnetwork.org/forum/t/ttn-mapper-and-no-data-appearing-for-ttgo-t-beam/15474/5 */
+function Decoder(bytes, port) {
+    // Decode an uplink message from a buffer
+    // (array) of bytes to an object of fields.
+    var decoded = {};
+
+    decoded.latitude = ((bytes[0]<<16)>>>0) + ((bytes[1]<<8)>>>0) + bytes[2];
+    decoded.latitude = (decoded.latitude / 16777215.0 * 180) - 90;
+
+    decoded.longitude = ((bytes[3]<<16)>>>0) + ((bytes[4]<<8)>>>0) + bytes[5];
+    decoded.longitude = (decoded.longitude / 16777215.0 * 360) - 180;
+
+    var altValue = ((bytes[6]<<8)>>>0) + bytes[7];
+    var sign = bytes[6] & (1 << 7);
+    if(sign) {
+      decoded.altitude = 0xFFFF0000 | altValue;
+    } else {
+      decoded.altitude = altValue;
+    }
+    decoded.hdop = bytes[8] / 10.0;
+    return decoded;
+}
+#endif
+#endif
         break;
       case 224:
         if( ComplianceTest.LinkCheck == true )
