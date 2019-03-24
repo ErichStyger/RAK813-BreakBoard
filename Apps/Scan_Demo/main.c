@@ -991,7 +991,7 @@ uint32_t ble_scan_timer_init(void)
 {
     app_timer_create(&ble_scan_timer,APP_TIMER_MODE_SINGLE_SHOT,(app_timer_timeout_handler_t)ble_scan_timer_handle);
 //    app_timer_start(ble_scan_timer,APP_TIMER_TICKS(1000), NULL);
-    return NULL;
+    return 0;
 }
 
 peripherals_data per_data;
@@ -1009,7 +1009,7 @@ void Write_OLED_string(unsigned char* status)
     OLED_ShowStr(len,5,status,2);
 }
 
-bool Check_Button_Status()
+bool Check_Button_Status(void)
 {
     if(bsp_board_button_state_get(bsp_board_pin_to_button_idx(BUTTON_1)))
     {
@@ -1022,7 +1022,7 @@ bool Check_Button_Status()
     return false;       
 }
 
-void nRF_hardware_init()
+void nRF_hardware_init(void)
 {
     uint32_t err_code;
     bool     erase_bonds;
@@ -1037,7 +1037,7 @@ void nRF_hardware_init()
     printf("nRE Hardware init success\r\n");
 }
 
-void nRF_BLE_init()
+void nRF_BLE_init(void)
 {
 //    db_discovery_init();
     ble_stack_init();
@@ -1049,7 +1049,7 @@ void nRF_BLE_init()
     printf("nRF BLE init success.\r\n");
 }
 
-void nRF_lora_init()
+void nRF_lora_init(void)
 {
     /* load lora configuration*/
     u_fs_init();
@@ -1107,7 +1107,7 @@ int main(void)
                 }
                 else
                 {
-                    err_code = sd_ble_gap_adv_stop();
+                    err_code = sd_ble_gap_adv_stop(); /* \todo this seems not to work? */
                     APP_ERROR_CHECK(err_code);
                     printf("nRF BLE advertising stop.\r\n");
                     err_code = bsp_indication_set(BSP_INDICATE_IDLE);

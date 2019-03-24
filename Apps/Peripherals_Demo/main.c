@@ -505,7 +505,7 @@ static void sleep_mode_enter(void)
     
     // Go to system-off mode (this function will not return; wakeup will cause a reset).
     err_code = sd_power_system_off();
-    APP_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code); /* note that in debug mode, it might not be able to go into low power mode */
 }
 
 
@@ -960,7 +960,7 @@ extern uint8_t GpsDataBuffer[512];
 bool readgpsdatastreamflag = false;
 bool readHTdatastreamflag = false;
 bool read3DHdatastreamflag = false;
-void* read_gps_timer_handle()
+void* read_gps_timer_handle(void)
 {
     readgpsdatastreamflag = true;
     return NULL;
@@ -970,10 +970,10 @@ uint32_t read_gps_timer_init(void)
 {
     app_timer_create(&read_gps_timer,APP_TIMER_MODE_REPEATED,(app_timer_timeout_handler_t)read_gps_timer_handle);
     app_timer_start(read_gps_timer,APP_TIMER_TICKS(100), NULL);
-    return NULL;
+    return 0;
 }
 
-void* read_HT_timer_handle()
+void* read_HT_timer_handle(void)
 {
     readHTdatastreamflag = true;
     return NULL;
@@ -982,11 +982,11 @@ void* read_HT_timer_handle()
 uint32_t read_HT_timer_init(void)
 {
     app_timer_create(&read_HT_timer,APP_TIMER_MODE_REPEATED,(app_timer_timeout_handler_t)read_HT_timer_handle);
-    app_timer_start(read_HT_timer,APP_TIMER_TICKS(5000), NULL);
-    return NULL;
+    app_timer_start(read_HT_timer,APP_TIMER_TICKS(2*5000), NULL);
+    return 0;
 }
 
-void* read_3DH_timer_handle()
+void* read_3DH_timer_handle(void)
 {
     read3DHdatastreamflag = true;
     return NULL;
@@ -996,7 +996,7 @@ uint32_t read_3DH_timer_init(void)
 {
     app_timer_create(&read_3DH_timer,APP_TIMER_MODE_REPEATED,(app_timer_timeout_handler_t)read_3DH_timer_handle);
     app_timer_start(read_3DH_timer, APP_TIMER_TICKS(5000), NULL);
-    return NULL;
+    return 0;
 }
 
 peripherals_data per_data;
@@ -1029,7 +1029,7 @@ void Write_OLED_string(unsigned char* status)
     OLED_ShowStr(len*5,6,status,1);
 }
 
-void nRF_hardware_init()
+void nRF_hardware_init(void)
 {
     uint32_t err_code;
     bool     erase_bonds;
@@ -1044,7 +1044,7 @@ void nRF_hardware_init()
     printf("nRE Hardware init success\r\n");
 }
 
-void nRF_BLE_init()
+void nRF_BLE_init(void)
 {
 //    db_discovery_init();
     ble_stack_init();
@@ -1056,20 +1056,19 @@ void nRF_BLE_init()
     printf("nRF BLE init success.\r\n");
 }
 
-void nRF_timer_init()
+void nRF_timer_init(void)
 {
     gps_setup(); 
     lis3dh_init();
     lis3dh_setup();
     read_gps_timer_init();
     read_HT_timer_init();
-    read_3DH_timer_init();
+//    read_3DH_timer_init();
 }
 
-int main(void)
-{
+int main(void) {
     uint32_t err_code;
-    //bool   erase_bonds;
+    uint32_t cntr = 0;
     
     nRF_hardware_init();
     Write_OLED_string("DEVICE INIT");
@@ -1098,12 +1097,18 @@ int main(void)
                 double lat,lon;
                 uint8_t ret = GpsGetLatestGpsPositionDouble(&lat, &lon);
                 per_data.gps_altitude = GpsGetLatestGpsAltitude();
-                if(ret == SUCCESS )
+                if(ret == SUCCESS)
                 {
-                    printf("lat=%f lot=%f \n", lat, lon);
+                    uint16_t alt = per_data.gps_altitude;
+
                     per_data.gps_latitude = lat;
                     per_data.gps_longitude = lon;
-                    Write_OLED_string("GPS UPDATE");
+                    cntr++;
+                    if (cntr==200) { /* slow down updates */
+                      cntr = 0;
+                      printf("lat=%f lon=%f alt=%d\n", lat, lon, alt);
+                      Write_OLED_string("GPS UPDATE");
+                    }
                 }
             }
         }
@@ -1115,8 +1120,8 @@ int main(void)
             {
                 //Sht31_startMeasurementLowResolution();
                 Sht31_readMeasurement_ft(&(per_data.HT_humidity),&(per_data.HT_temperature));
-                printf("temperature:%.1fC , humidity£º%.1f%\r\n\0",per_data.HT_temperature,per_data.HT_humidity);
-                Write_OLED_string("HT UPDATE");
+                printf("temperature: %.1fC, humidity %.1f\r\n", per_data.HT_temperature, per_data.HT_humidity);
+                Write_OLED_string("TH UPDATE");
             }
             
         }

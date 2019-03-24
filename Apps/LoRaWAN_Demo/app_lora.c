@@ -293,7 +293,7 @@ void u_fs_init()
 
 void u_fs_check_lora_cfg(lora_cfg_t *cfg)
 {
-    printf("%x\r\n",cfg->sof);
+    printf("sof: %x\r\n",cfg->sof);
     if(cfg->sof != 0x55)
     {
         memcpy((uint8_t*)cfg,&g_def_cfg,sizeof(g_def_cfg));
@@ -334,12 +334,22 @@ void dump_hex2str(uint8_t *buf , uint8_t len)
     printf("\r\n");
 }
 
+static void PrintTxFrame(void) {
+  int i;
+
+  printf("TX Frame: ");
+  for(i=0; i<AppDataSize; i++) {
+    printf("%x ", AppData[i]);
+  }
+  printf("\r\n");
+}
+
 static void PrepareTxFrame( uint8_t port )
 {
     switch( port )
     {
       case 2:
-        {
+        { /* dummy data */
             AppData[0] = 0x01;
             AppData[1] = 0x02;
             AppData[2] = 0x03;
@@ -759,7 +769,7 @@ LoRaMacPrimitives_t LoRaMacPrimitives;
 LoRaMacCallback_t LoRaMacCallbacks;
 MibRequestConfirm_t mibReq;
 
-void lora_init()
+void lora_init(void)
 {
     BoardInitMcu( );
     DeviceState = DEVICE_STATE_INIT;
@@ -768,7 +778,7 @@ void lora_init()
 
 lora_cfg_t *lora_cfg=&g_lora_cfg;
 
-void lora_process()
+void lora_process(void)
 {
     switch( DeviceState )
     {
@@ -916,6 +926,7 @@ void lora_process()
             if( NextTx == true )
             {
                 PrepareTxFrame( 2 );
+                PrintTxFrame();
                 NextTx = SendFrame( );
             }
             if( ComplianceTest.Running == true )
