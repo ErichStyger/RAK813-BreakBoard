@@ -137,6 +137,11 @@ int16_t GpsGetLatestGpsAltitude( void );
 void GpsFormatGpsData( void );
 
 /*!
+ * \brief return the current fix quality
+ */
+uint16_t GpsGetFixQuality(void);
+
+/*!
  * \brief Resets the GPS position variables
  */
 void GpsResetPosition( void );

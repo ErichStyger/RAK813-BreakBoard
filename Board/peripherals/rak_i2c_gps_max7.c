@@ -230,7 +230,7 @@ bool Max7GpsReadDataStream( void )
     uint8_t incomingCheck;
     bool contFlag = true;
 
-		uint8_t i=0;
+		size_t i=0;
     while( contFlag )
     {
         incomingCheck = Max7GpsReadRegister( DATA_STREAM_ADDRESS );
@@ -671,13 +671,13 @@ GpsStruct* Max7GpsgetData( void )
 
 #include "nrf_delay.h"
 #include "custom_board.h"
-void Gps_Gpio_Init()
+void Gps_Gpio_Init(void)
 {
     nrf_gpio_cfg_output(GPS_PWR_ON_PIN);
     nrf_gpio_cfg_output(GPS_RESET_PIN);
 }
 
-void gps_setup()
+void gps_setup(void)
 {
     Gps_Gpio_Init();
     GPS_PWR_OFF;

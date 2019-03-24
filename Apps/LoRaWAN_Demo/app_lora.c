@@ -15,6 +15,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 /*! \file classA/SensorNode/main.c */
 
+#include "Platform.h"
 #include <string.h>
 #include <math.h>
 #include "board.h"
@@ -272,7 +273,7 @@ void wait_for_flash_ready(nrf_fstorage_t const * p_fstorage)
     }
 }
 
-void u_fs_init()
+void u_fs_init(void)
 {
     ret_code_t rc;
     //NRF_LOG_INFO(LOG_INFO, "fstorage example started!");
@@ -344,6 +345,8 @@ static void PrintTxFrame(void) {
   printf("\r\n");
 }
 
+extern peripherals_data per_data;
+
 static void PrepareTxFrame( uint8_t port )
 {
     switch( port )
@@ -363,12 +366,24 @@ static void PrepareTxFrame( uint8_t port )
           /*lat=47.054777 lon=8.585165 alt=659*/
           /* https://www.thethingsnetwork.org/docs/applications/ttnmapper/ */
           /* https://github.com/AmedeeBulle/ttn-mapper/blob/master/ttn-mapper-gps/ttn_mapper.cpp#L116 */
-          float lat = 47.054777;
-          float lon = 8.585165;
-          uint16_t alt = 659;
-          uint8_t hdop = 0x4; /* Horizontal Dilution of Precision, lower is better */
-
+          float lat = per_data.gps_latitude;//47.054777;
+          float lon = per_data.gps_longitude;//8.585165;
+          uint16_t alt = per_data.gps_altitude; //659;
+          float hdop; /* Horizontal Dilution of Precision, lower is better */ /* value of >0x30xx is considered as a fix */
           uint32_t val;
+
+          if (per_data.gps_quality>=0x3000) {
+            hdop = (per_data.gps_quality-0x3000);
+            hdop /= 100.0f;
+            hdop = 20.0f-hdop;
+            if (hdop<1.0f) {
+              hdop = 1.0f;
+            } else if (hdop>20.0f) {
+              hdop = 20.0f;
+            }
+          } else {
+            hdop = 20.0; /* considering as bad */
+          }
 
           val = ((lat*(lat>=0?1:-1)+90)/180)*16777215;
           AppData[0]  = val>>16; /* lat */
@@ -380,7 +395,7 @@ static void PrepareTxFrame( uint8_t port )
           AppData[5]  = val;
           AppData[6]  = alt>>8; /* alt */
           AppData[7]  = alt;
-          AppData[8]  = hdop; /* hdop */
+          AppData[8]  = (uint8_t)(hdop*10.0); /* 1.0: best, 20.0: very poor */
           AppDataSize = 9;
         }
 #if 0 /* tnn decoder function */
@@ -976,9 +991,14 @@ void lora_process(void)
         {
             if( NextTx == true )
             {
-                PrepareTxFrame( 2 );
+              if (GpsHasFix()) {
+                PrepareTxFrame(2);
                 PrintTxFrame();
-                NextTx = SendFrame( );
+                NextTx = SendFrame();
+              } else {
+                NRF_LOG_INFO("No GPS fix.")
+                printf("no GPS fix.\r\n");
+              }
             }
             if( ComplianceTest.Running == true )
             {

@@ -36,7 +36,7 @@ const int32_t MaxWestPosition = 8388608;        // -2^23
 
 tNmeaGpsData NmeaGpsData;
 
-static double HasFix = false;
+static bool HasFix = false;
 static double Latitude = 0;
 static double Longitude = 0;
 
@@ -636,6 +636,13 @@ void GpsFormatGpsData( void )
     }
     GpsConvertPositionFromStringToNumerical( );
     GpsConvertPositionIntoBinary( );
+}
+
+uint16_t GpsGetFixQuality(void) {
+  uint16_t q;
+
+  q = (((uint8_t)NmeaGpsData.NmeaFixQuality[0])<<8) + (uint8_t)NmeaGpsData.NmeaFixQuality[1];
+  return q;
 }
 
 void GpsResetPosition( void )

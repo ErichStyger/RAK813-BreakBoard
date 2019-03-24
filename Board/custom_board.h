@@ -170,6 +170,7 @@ typedef struct {
         double gps_longitude;
         double gps_latitude;
         uint16_t gps_altitude;
+        uint16_t gps_quality;
         float HT_temperature;
         float HT_humidity;
         int MEMS_X;

@@ -925,15 +925,83 @@ void power_manage(void)
     APP_ERROR_CHECK(err_code);
 }
 
-void nRF_hardware_init()
-{
+#if PL_USE_GPS
+/**@i2c device init
+*/
+static uint32_t i2c_drv_init(void) {
+  uint32_t err_code;
+
+  const nrf_drv_twi_config_t twi_lis_config = {
+      .scl                = DEV_TWI_SCL_PIN,
+      .sda                = DEV_TWI_SDA_PIN,
+      .frequency          = NRF_TWI_FREQ_400K,
+      .interrupt_priority = APP_IRQ_PRIORITY_HIGHEST
+  };
+
+  err_code = rak_i2c_init(&twi_lis_config);
+  if(err_code != NRF_SUCCESS)
+  {
+      return err_code;
+  }
+  return NRF_SUCCESS;
+}
+
+static bool readgpsdatastreamflag = false;
+extern uint8_t GpsDataBuffer[512];
+peripherals_data per_data;
+APP_TIMER_DEF(read_gps_timer);
+
+void *read_gps_timer_handle(void) {
+  readgpsdatastreamflag = true;
+  return NULL;
+}
+
+uint32_t read_gps_timer_init(void) {
+  app_timer_create(&read_gps_timer,APP_TIMER_MODE_REPEATED,(app_timer_timeout_handler_t)read_gps_timer_handle);
+  app_timer_start(read_gps_timer,APP_TIMER_TICKS(100), NULL);
+  return 0;
+}
+
+static void ReadGPSStream(void) {
+  static int cntr = 0;
+
+  if (readgpsdatastreamflag) {
+      NRF_LOG_DEBUG("gps wait\r\n");
+      Max7GpsReadDataStream();
+      readgpsdatastreamflag = false;
+      if (GpsParseGpsData(GpsDataBuffer, sizeof(GpsDataBuffer))) {
+          double lat,lon;
+
+          uint8_t ret = GpsGetLatestGpsPositionDouble(&lat, &lon);
+          if(ret == SUCCESS) { /* have fix */
+            per_data.gps_altitude = GpsGetLatestGpsAltitude();
+            per_data.gps_latitude = lat;
+            per_data.gps_longitude = lon;
+            per_data.gps_quality = GpsGetFixQuality();
+            cntr++;
+            if (cntr==200) { /* slow down updates */
+              cntr = 0;
+              printf("lat=%f lon=%f alt=%d qual=%04X\n", lat, lon, per_data.gps_altitude, per_data.gps_quality);
+//                Write_OLED_string("GPS UPDATE");
+              NRF_LOG_INFO("Updated GPS data.");
+            }
+         }
+      }
+  }
+}
+#endif /* PL_USE_GPS */
+
+void nRF_hardware_init(void) {
     uint32_t err_code;
     bool     erase_bonds;
     err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
-    
+
     uart_init();
     log_init();
+#if PL_USE_GPS
+    i2c_drv_init();
+#endif
     buttons_leds_init(&erase_bonds);
     printf("nRE Hardware init success\r\n");
 }
@@ -959,36 +1027,38 @@ void nRF_lora_init(void)
     u_fs_check_lora_cfg(&g_lora_cfg);
     lora_init(&g_lora_cfg);
     printf("LoRa init success.\r\n");
+    NRF_LOG_INFO("LoRa init success.");
 }
 
-int main(void)
-{
-    uint32_t err_code;
-    //bool   erase_bonds;
-    
-    nRF_hardware_init();
-    nRF_BLE_init();
-    nRF_lora_init();
-    
-    err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
-    APP_ERROR_CHECK(err_code);
-    printf("nRF BLE advertising start.\r\n");
+int main(void) {
+  uint32_t err_code;
 
-    // Enter main loop.
-    while(1)
-    {
-        lora_process();
-        
-        if (!NRF_LOG_PROCESS())
-        {
-            power_manage();
-        }
-        if(loraconfigupdataflg)
-        {
-            u_fs_write_lora_cfg(&g_lora_cfg);
-            loraconfigupdataflg = false;
-        }     
-    }
+  nRF_hardware_init();
+  nRF_BLE_init();
+  nRF_lora_init();
+
+#if PL_USE_GPS
+  gps_setup();
+  read_gps_timer_init();
+#endif
+  //err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
+  APP_ERROR_CHECK(err_code);
+  printf("nRF BLE advertising start.\r\n");
+
+  // Enter main loop.
+  while(1) {
+      lora_process();
+    #if PL_USE_GPS
+      ReadGPSStream();
+    #endif
+      if (!NRF_LOG_PROCESS()) {
+          power_manage();
+      }
+      if(loraconfigupdataflg) {
+          u_fs_write_lora_cfg(&g_lora_cfg);
+          loraconfigupdataflg = false;
+      }
+  }
 }
 
 /**
