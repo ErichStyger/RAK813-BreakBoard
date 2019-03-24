@@ -972,7 +972,7 @@ int main(void)
     err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
     printf("nRF BLE advertising start.\r\n");
-    
+
     // Enter main loop.
     while(1)
     {
