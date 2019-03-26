@@ -366,16 +366,19 @@ static void PrepareTxFrame(uint8_t port)
           /*lat=47.054777 lon=8.585165 alt=659*/
           /* https://www.thethingsnetwork.org/docs/applications/ttnmapper/ */
           /* https://github.com/AmedeeBulle/ttn-mapper/blob/master/ttn-mapper-gps/ttn_mapper.cpp#L116 */
-          float lat = per_data.gps_latitude;//47.054777;
-          float lon = per_data.gps_longitude;//8.585165;
-          uint16_t alt = per_data.gps_altitude; //659;
-          float hdop; /* Horizontal Dilution of Precision, lower is better */ /* value of >0x30xx is considered as a fix */
+          float lat = 47.054777;
+          float lon = 8.585165;
+          uint16_t alt = 659;
+          float hdop = 1.0; /* Horizontal Dilution of Precision, lower is better */ /* value of >0x30xx is considered as a fix */
           uint32_t val;
+
+
 
           if (per_data.gps_quality>=0x3000) {
             hdop = (per_data.gps_quality-0x3000);
             hdop /= 100.0f;
             hdop = 20.0f-hdop;
+            hdop -= 15; /* artificial adjustment */
             if (hdop<1.0f) {
               hdop = 1.0f;
             } else if (hdop>20.0f) {
@@ -384,6 +387,9 @@ static void PrepareTxFrame(uint8_t port)
           } else {
             hdop = 20.0; /* considering as bad */
           }
+          lat = per_data.gps_latitude;//47.054777;
+          lon = per_data.gps_longitude;//8.585165;
+          alt = per_data.gps_altitude; //659;
 
           val = ((lat*(lat>=0?1:-1)+90)/180)*16777215;
           AppData[0]  = val>>16; /* lat */

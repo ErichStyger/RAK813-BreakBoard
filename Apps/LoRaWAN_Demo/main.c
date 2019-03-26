@@ -1039,7 +1039,7 @@ void nRF_hardware_init(void) {
     printf("nRE Hardware init success\r\n");
 }
 
-void nRF_BLE_init()
+void nRF_BLE_init(void)
 {
 //    db_discovery_init();
     ble_stack_init();
