@@ -1,6 +1,6 @@
 /*
- * FreeRTOS Kernel V10.1.1
- * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V10.2.0
+ * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -41,7 +41,9 @@
     #include "SIM_PDD.h"   /* PDD interface to system integration module */
   #endif
 #endif
+
 #include "McuLib.h" /* include SDK and API used */
+#if McuLib_CONFIG_CPU_IS_ARM_CORTEX_M
 /* --------------------------------------------------- */
 /* Let the user override the pre-loading of the initial LR with the address of
    prvTaskExitError() in case is messes up unwinding of the stack in the
@@ -927,8 +929,8 @@ void vPortYieldFromISR(void) {
 }
 /*-----------------------------------------------------------*/
 /* return the tick raw counter value. It is assumed that the counter register has been reset at the last tick time */
-portLONG uxGetTickCounterValue(void) {
-  portLONG val;
+    uint32_t uxGetTickCounterValue(void) {
+  long val;
   
   GET_TICK_CURRENT_VAL(&val);
   return val;
@@ -1655,4 +1657,6 @@ __asm uint32_t vPortGetIPSR(void) {
 
 
 #endif /* ARM M4(F) core */ 
+
+#endif /* McuLib_CONFIG_CPU_IS_ARM_CORTEX_M */
 

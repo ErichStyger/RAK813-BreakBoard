@@ -1095,9 +1095,11 @@ int main(void) {
   gps_setup();
   read_gps_timer_init();
 #endif
-  //err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
-  //APP_ERROR_CHECK(err_code);
-  //printf("nRF BLE advertising start.\r\n");
+#if 0
+  err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
+  APP_ERROR_CHECK(err_code);
+  printf("nRF BLE advertising start.\r\n");
+#endif
   per_data.gps_nofMsg = 0;
 #if PL_USE_OLED
   Write_OLED_string("APP Start");
