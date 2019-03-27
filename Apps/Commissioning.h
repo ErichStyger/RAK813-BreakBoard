@@ -39,17 +39,20 @@ Maintainer: Miguel Luis and Gregory Cristian
  *         BoardGetUniqueId function
  */
 #define LORAWAN_DEVICE_EUI                          { IEEE_OUI, 0xFF, 0xFE, 0x00, 0x00, 0x0A }
-
+// 60 C5 A8 FF FE 00 00 0A
 /*!
  * Application IEEE EUI (big endian)
  */
-#define LORAWAN_APPLICATION_EUI                     { 0x70, 0xB3, 0xd5, 0x7E, 0xD0, 0x00, 0x96, 0x5C }
+#define LORAWAN_APPLICATION_EUI                     { 0x70, 0xB3, 0xd5, 0x7E, 0xD0, 0x01, 0x99, 0x5C }
                                                      //70b3d57ef00046a4   70B3D57E D0007DFA
+//70 B3 D5 7E D0 01 99 5C
+
 /*!
  * AES encryption/decryption cipher application key
  */
-#define LORAWAN_APPLICATION_KEY                     { 0xBF, 0x8A, 0x63, 0x43, 0x81, 0xB0, 0x29, 0x0D, 0x34, 0xEC, 0x6E, 0x7E, 0x77, 0xF4, 0x26, 0x4B }
+#define LORAWAN_APPLICATION_KEY                     { 0x80, 0x29, 0x77, 0x2F, 0x30, 0xDD, 0xC0, 0x4F, 0xDF, 0x5C, 0x50, 0xCB, 0xA5, 0xD6, 0x8A, 0xE1 }
                                                      //a6b08140dae1d795ebfa5a6dee1f4dbd    09A503D6256F9EF612A15181F583880A
+// 80 29 77 2F 30 DD C0 4F DF 5C 50 CB A5 D6 8A E1
 /*!
  * Current network ID
  */

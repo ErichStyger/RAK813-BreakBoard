@@ -91,6 +91,13 @@
 #include "timer.h"
 #include "board.h"
 
+#include "McuLib.h"
+#include "McuUtility.h"
+#include "McuWait.h"
+#include "McuArmTools.h"
+#include "McuLED1.h"
+#include "McuLED2.h"
+
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
 #define APP_FEATURE_NOT_SUPPORTED       BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2        /**< Reply when unsupported features are requested. */
@@ -901,7 +908,7 @@ static void buttons_leds_init(bool * p_erase_bonds)
     
 //    err_code = bsp_btn_ble_init(NULL, &startup_event);
 //    APP_ERROR_CHECK(err_code);
-    
+      *p_erase_bonds = false;
 //    *p_erase_bonds = (startup_event == BSP_EVENT_CLEAR_BONDING_DATA);
 }
 
@@ -931,30 +938,36 @@ peripherals_data per_data;
 
 #if PL_USE_OLED
 static void Write_OLED_string(unsigned char *status) {
-    char len = strlen((char const*)status);
-    len = (21- len)/2;
-    char line1[25];
-    char line2[25];
-    char line3[25];
-    char line4[25];
-    char line5[25];
+  char len = McuUtility_strlen((char const*)status);
+  uint8_t buf[32];
+  uint8_t line;
 
-    sprintf(line1,"Battery:%d%\0",per_data.battery);
-    sprintf(line2,"T:%.1fC, H:%.1f%\0",per_data.HT_temperature, per_data.HT_humidity);
-    sprintf(line3,"%.2fN,%.2fE,%dM\0",per_data.gps_latitude,per_data.gps_longitude,per_data.gps_altitude);
-    sprintf(line4,"X:%d Y:%d\0",per_data.MEMS_X,per_data.MEMS_Y);
-    sprintf(line5,"Z:%d\0",per_data.MEMS_Z);
+  len = (21-len)/2;
+  //sprintf(line1,"Battery:%d%\0",per_data.battery);
+  //sprintf(line2,"T:%.1fC, H:%.1f%\0",per_data.HT_temperature, per_data.HT_humidity);
+  //sprintf(line3,"%.2fN,%.2fE,%dM\0",per_data.gps_latitude,per_data.gps_longitude,per_data.gps_altitude);
+  //sprintf(line4,"X:%d Y:%d\0",per_data.MEMS_X,per_data.MEMS_Y);
+  //sprintf(line5,"Z:%d\0",per_data.MEMS_Z);
 
-    OLED_Init();
-    OLED_CLS();
+  OLED_Init();
+  OLED_CLS();
 
-    OLED_ShowStr(10,0,"RAK813 BreakBoard",1);
-    OLED_ShowStr(0,1,(unsigned char*)line1,1);
-    OLED_ShowStr(0,2,(unsigned char*)line2,1);
-    OLED_ShowStr(0,3,(unsigned char*)line3,1);
-    OLED_ShowStr(0,4,(unsigned char*)line4,1);
-    OLED_ShowStr(0,5,(unsigned char*)line5,1);
-    OLED_ShowStr(len*5,6,status,1);
+  line = 0;
+  OLED_ShowStr(10, line, "RAK813 BreakBoard",1);
+  line++;
+  McuUtility_strcatNumFloat(buf,  sizeof(buf), per_data.gps_latitude, 2);
+  McuUtility_strcat(buf, sizeof(buf), "N,");
+  McuUtility_strcatNumFloat(buf,  sizeof(buf), per_data.gps_longitude, 2);
+  McuUtility_strcat(buf, sizeof(buf), "M,");
+  McuUtility_strcatNum16u(buf,  sizeof(buf), per_data.gps_altitude);
+  McuUtility_strcat(buf, sizeof(buf), "m");
+  OLED_ShowStr(0, line, buf, 1);
+  line++;
+  McuUtility_strcpy(buf, sizeof(buf), "GPS#: ");
+  McuUtility_strcatNum32u(buf, sizeof(buf),  per_data.gps_nofMsg);
+  OLED_ShowStr(0, line, buf, 2);
+  line+=2;
+  OLED_ShowStr(len*4, line, status, 2);
 }
 #endif
 /*------------------------------------------------------------------------------*/
@@ -995,8 +1008,6 @@ uint32_t read_gps_timer_init(void) {
 }
 
 static void ReadGPSStream(void) {
-  static int cntr = 0;
-
   if (readgpsdatastreamflag) {
       NRF_LOG_DEBUG("gps wait\r\n");
       Max7GpsReadDataStream();
@@ -1010,9 +1021,8 @@ static void ReadGPSStream(void) {
             per_data.gps_latitude = lat;
             per_data.gps_longitude = lon;
             per_data.gps_quality = GpsGetFixQuality();
-            cntr++;
-            if (cntr==200) { /* slow down updates */
-              cntr = 0;
+            per_data.gps_nofMsg++;
+            if ((per_data.gps_nofMsg%100)==0) { /* slow down updates */
               printf("lat=%f lon=%f alt=%d qual=%04X\n", lat, lon, per_data.gps_altitude, per_data.gps_quality);
               Write_OLED_string("GPS UPDATE");
               NRF_LOG_INFO("Updated GPS data.");
@@ -1063,12 +1073,23 @@ void nRF_lora_init(void)
     NRF_LOG_INFO("LoRa init success.");
 }
 
+static void McuLibInit(void) {
+  McuLib_Init();
+  McuUtility_Init();
+  McuArmTools_Init();
+  McuWait_Init();
+  McuLED1_Init();
+  McuLED2_Init();
+}
+
 int main(void) {
   uint32_t err_code;
+  uint32_t cntr;
 
   nRF_hardware_init();
   nRF_BLE_init();
   nRF_lora_init();
+  McuLibInit();
 
 #if PL_USE_GPS
   gps_setup();
@@ -1077,23 +1098,33 @@ int main(void) {
   //err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
   //APP_ERROR_CHECK(err_code);
   //printf("nRF BLE advertising start.\r\n");
-
+  per_data.gps_nofMsg = 0;
 #if PL_USE_OLED
   Write_OLED_string("APP Start");
 #endif
   // Enter main loop.
-  while(1) {
-      lora_process();
-    #if PL_USE_GPS
-      ReadGPSStream();
-    #endif
-      if (!NRF_LOG_PROCESS()) {
-          power_manage();
-      }
-      if(loraconfigupdataflg) {
-          u_fs_write_lora_cfg(&g_lora_cfg);
-          loraconfigupdataflg = false;
-      }
+  for(;;) {
+    lora_process();
+  #if PL_USE_GPS
+    ReadGPSStream();
+  #endif
+    if (!NRF_LOG_PROCESS()) {
+      power_manage();
+    }
+    if(loraconfigupdataflg) {
+      u_fs_write_lora_cfg(&g_lora_cfg);
+      loraconfigupdataflg = false;
+    }
+    cntr++;
+    if (cntr>=150000) {
+      cntr=0;
+      McuLED2_Neg();
+    }
+    if (GpsHasFix()) {
+      McuLED1_On();
+    } else {
+      McuLED1_Off();
+    }
   }
 }
 
