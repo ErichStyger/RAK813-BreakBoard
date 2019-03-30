@@ -1024,7 +1024,9 @@ static void ReadGPSStream(void) {
             per_data.gps_nofMsg++;
             if ((per_data.gps_nofMsg%100)==0) { /* slow down updates */
               printf("lat=%f lon=%f alt=%d qual=%04X\n", lat, lon, per_data.gps_altitude, per_data.gps_quality);
+#if PL_USE_OLED
               Write_OLED_string("GPS UPDATE");
+#endif
               NRF_LOG_INFO("Updated GPS data.");
             }
          }
@@ -1086,21 +1088,24 @@ int main(void) {
   uint32_t err_code;
   uint32_t cntr;
 
+//  McuLibInit();
+//  McuWait_Waitms(500); /* delay to avoid possible power up issues? */
   nRF_hardware_init();
   nRF_BLE_init();
   nRF_lora_init();
-  McuLibInit();
 
 #if PL_USE_GPS
   gps_setup();
   read_gps_timer_init();
 #endif
-#if 0
+#if 1
   err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
   APP_ERROR_CHECK(err_code);
   printf("nRF BLE advertising start.\r\n");
 #endif
+#if PL_USE_GPS
   per_data.gps_nofMsg = 0;
+#endif
 #if PL_USE_OLED
   Write_OLED_string("APP Start");
 #endif
@@ -1117,6 +1122,7 @@ int main(void) {
       u_fs_write_lora_cfg(&g_lora_cfg);
       loraconfigupdataflg = false;
     }
+#if 0
     cntr++;
     if (cntr>=150000) {
       cntr=0;
@@ -1127,6 +1133,7 @@ int main(void) {
     } else {
       McuLED1_Off();
     }
+#endif
   }
 }
 

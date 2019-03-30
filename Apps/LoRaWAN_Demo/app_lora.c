@@ -31,9 +31,9 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "lis3dh_driver.h"
 #include "rak_i2c_sht31.h"
 /*!
-* Defines the application data transmission duty cycle. 5s, value in [ms].
+* Defines the application data transmission duty cycle. value in [ms].
 */
-#define APP_TX_DUTYCYCLE                            20*1000
+#define APP_TX_DUTYCYCLE                            (30*1000)
 
 /*!
 * Defines a random delay for application data transmission duty cycle. 1s,
@@ -352,7 +352,7 @@ static void PrepareTxFrame(uint8_t port)
     switch( port )
     {
       case 2:
-#if 0
+#if !PL_USE_GPS
         { /* dummy data */
             AppData[0] = 0x01;
             AppData[1] = 0x02;
@@ -383,7 +383,8 @@ static void PrepareTxFrame(uint8_t port)
               hdop = 20.0f;
             }
           } else {
-            hdop = 20.0; /* considering as bad */
+            //hdop = 20.0; /* considering as bad */
+            hdop = 1.0;
           }
           lat = per_data.gps_latitude;//47.054777;
           lon = per_data.gps_longitude;//8.585165;
@@ -841,7 +842,7 @@ MibRequestConfirm_t mibReq;
 
 void lora_init(void)
 {
-    BoardInitMcu( );
+    BoardInitMcu();
     DeviceState = DEVICE_STATE_INIT;
 }
 
@@ -995,14 +996,14 @@ void lora_process(void)
         {
             if( NextTx == true )
             {
-              if (GpsHasFix()) {
+             // if (GpsHasFix()) { /*! \todo */
                 PrepareTxFrame(2);
                 PrintTxFrame();
                 NextTx = SendFrame();
-              } else {
-                NRF_LOG_INFO("No GPS fix.")
-                printf("no GPS fix.\r\n");
-              }
+             // } else {
+             //   NRF_LOG_INFO("No GPS fix.")
+             //   printf("no GPS fix.\r\n");
+             // }
             }
             if( ComplianceTest.Running == true )
             {
