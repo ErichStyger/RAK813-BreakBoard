@@ -8,7 +8,7 @@
 #ifndef APPS_PLATFORM_H_
 #define APPS_PLATFORM_H_
 
-#define PL_USE_GPS   (0)
-#define PL_USE_OLED  (0)
+#define PL_USE_GPS   (1)
+#define PL_USE_OLED  (1)
 
 #endif /* APPS_PLATFORM_H_ */

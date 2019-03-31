@@ -672,7 +672,7 @@ static void OnRadioTxDone( void )
         McpsConfirm.Status = LORAMAC_EVENT_INFO_STATUS_OK;
         ChannelsNbRepCounter++;
     }
-    NRF_LOG_INFO("TDn\r\n");
+    NRF_LOG_INFO("TxDone\r\n");
 }
 
 static void PrepareRxDoneAbort( void )
@@ -1199,7 +1199,7 @@ static void OnRadioRxTimeout( void )
             LoRaMacFlags.Bits.MacDone = 1;
         }
     }
-    NRF_LOG_INFO("RxTo\r\n");
+    NRF_LOG_INFO("RxTimeout\r\n");
 }
 
 static void OnMacStateCheckTimerEvent( void )

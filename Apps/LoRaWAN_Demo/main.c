@@ -1088,8 +1088,8 @@ int main(void) {
   uint32_t err_code;
   uint32_t cntr;
 
-//  McuLibInit();
-//  McuWait_Waitms(500); /* delay to avoid possible power up issues? */
+  McuLibInit();
+  McuWait_Waitms(500); /* delay to avoid possible power up issues? */
   nRF_hardware_init();
   nRF_BLE_init();
   nRF_lora_init();
@@ -1098,7 +1098,7 @@ int main(void) {
   gps_setup();
   read_gps_timer_init();
 #endif
-#if 1
+#if 0
   err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
   APP_ERROR_CHECK(err_code);
   printf("nRF BLE advertising start.\r\n");
@@ -1122,7 +1122,7 @@ int main(void) {
       u_fs_write_lora_cfg(&g_lora_cfg);
       loraconfigupdataflg = false;
     }
-#if 0
+#if 1
     cntr++;
     if (cntr>=150000) {
       cntr=0;

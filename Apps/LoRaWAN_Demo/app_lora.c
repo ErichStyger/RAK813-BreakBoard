@@ -518,6 +518,7 @@ static void OnTxNextPacketTimerEvent( void )
     mibReq.Type = MIB_NETWORK_JOINED;
     status = LoRaMacMibGetRequestConfirm( &mibReq );
     
+    printf("LoRa OnTxNextPacketTimerEvent\r\n");
     if( status == LORAMAC_STATUS_OK )
     {
         if( mibReq.Param.IsNetworkJoined == true )
@@ -590,6 +591,7 @@ static void McpsConfirm( McpsConfirm_t *mcpsConfirm )
 */
 static void McpsIndication( McpsIndication_t *mcpsIndication )
 {
+    printf("LoRa McpsIndication\r\n");
     if( mcpsIndication->Status != LORAMAC_EVENT_INFO_STATUS_OK )
     {
         return;
@@ -797,6 +799,7 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
 */
 static void MlmeConfirm( MlmeConfirm_t *mlmeConfirm )
 {
+    printf("LoRa MlmeConfirm\r\n");
     switch( mlmeConfirm->MlmeRequest )
     {
       case MLME_JOIN:
@@ -851,10 +854,11 @@ lora_cfg_t *lora_cfg=&g_lora_cfg;
 
 void lora_process(void)
 {
-    switch( DeviceState )
+    switch(DeviceState)
     {
       case DEVICE_STATE_INIT:
         {
+          printf("LoRa DEVICE_STATE_INIT\r\n");
             LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm;
             LoRaMacPrimitives.MacMcpsIndication = McpsIndication;
             LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm;
@@ -901,13 +905,14 @@ void lora_process(void)
         }
       case DEVICE_STATE_JOIN:
         {
+          printf("LoRa DEVICE_STATE_JOIN\r\n");
 #if( OVER_THE_AIR_ACTIVATION != 0 )
             MlmeReq_t mlmeReq;
             
             // Initialize LoRaMac device unique ID
             //BoardGetUniqueId( DevEui );
             
-            printf("OTAA: \r\n");
+            printf("OTAA:\r\n");
             printf("Dev_EUI: ");
             dump_hex2str(lora_cfg->dev_eui , 8);
             printf("AppEui: ");
@@ -945,9 +950,11 @@ void lora_process(void)
                 LoRaMacStatus_t status;
                 status = LoRaMacMlmeRequest( &mlmeReq );
                 NRF_LOG_INFO("OTAA Join Start...%d \r\n", status);
+                printf("OTAA Join Start...\r\n");
             }
             DeviceState = DEVICE_STATE_SLEEP;
             NRF_LOG_INFO("goto to sleep");
+            printf("goto to sleep\r\n");
 #else
             // Choose a random device address if not already defined in Commissioning.h
             if( DevAddr == 0 )
@@ -994,6 +1001,7 @@ void lora_process(void)
         }
       case DEVICE_STATE_SEND:
         {
+            printf("LoRa DEVICE_STATE_SEND\r\n");
             if( NextTx == true )
             {
              // if (GpsHasFix()) { /*! \todo */
@@ -1020,6 +1028,7 @@ void lora_process(void)
         }
       case DEVICE_STATE_CYCLE:
         {
+            printf("LoRa DEVICE_STATE_CYCLE\r\n");
             DeviceState = DEVICE_STATE_SLEEP;
             
             // Schedule next packet transmission
@@ -1030,7 +1039,7 @@ void lora_process(void)
       case DEVICE_STATE_SLEEP:
         {
             // Wake up through events
-            TimerLowPowerHandler( );
+            TimerLowPowerHandler();
             break;
         }
       default:
