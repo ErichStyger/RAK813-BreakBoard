@@ -809,6 +809,9 @@ static void MlmeConfirm( MlmeConfirm_t *mlmeConfirm )
                 // Status is OK, node has joined the network
                 DeviceState = DEVICE_STATE_SEND;
                 printf("OTAA Join Success \r\n");
+			#if PL_USE_OLED
+			  Write_OLED_string("Join success!");
+			#endif
             }
             else
             {
@@ -951,7 +954,10 @@ void lora_process(void)
                 status = LoRaMacMlmeRequest( &mlmeReq );
                 NRF_LOG_INFO("OTAA Join Start...%d \r\n", status);
                 printf("OTAA Join Start...\r\n");
-            }
+			#if PL_USE_OLED
+			  Write_OLED_string("OTAA join...");
+			#endif
+           }
             DeviceState = DEVICE_STATE_SLEEP;
             NRF_LOG_INFO("goto to sleep");
             printf("goto to sleep\r\n");

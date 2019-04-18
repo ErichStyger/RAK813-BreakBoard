@@ -11,4 +11,6 @@
 #define PL_USE_GPS   (1)
 #define PL_USE_OLED  (1)
 
+void Write_OLED_string(unsigned char *status);
+
 #endif /* APPS_PLATFORM_H_ */

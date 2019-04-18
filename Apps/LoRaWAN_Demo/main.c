@@ -937,7 +937,7 @@ peripherals_data per_data;
 #endif
 
 #if PL_USE_OLED
-static void Write_OLED_string(unsigned char *status) {
+void Write_OLED_string(unsigned char *status) {
   char len = McuUtility_strlen((char const*)status);
   uint8_t buf[32];
   uint8_t line;
