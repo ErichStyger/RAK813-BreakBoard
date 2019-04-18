@@ -1,3 +1,12 @@
+/*
+ * IncludeMcuLibConfig.h
+ *
+ *  Created on: 17.02.2019
+ *      Author: Erich Styger
+ */
+
+#ifndef INCLUDEMCULIBCONFIG_H_
+#define INCLUDEMCULIBCONFIG_H_
 
 /* header file is included with -include compiler option */
 
@@ -37,3 +46,5 @@
 #endif
 
 #endif
+
+#endif /* INCLUDEMCULIBCONFIG_H_ */
